@@ -1,4 +1,4 @@
-import MessageBoard from './MessageBoard';
+import MessageBoard from './MessageBoard/MessageBoard';
 import './index.css';
 function App() {
   return <MessageBoard />;
