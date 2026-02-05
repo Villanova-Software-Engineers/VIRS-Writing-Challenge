@@ -2,11 +2,10 @@ from pydantic import BaseModel
 
 class Message(BaseModel):
     author: str
-    message_id: str
+    id: int
     content: str
-    timestamp: datetime | None = None
-    reply_to: Message | None = None
-    replies: list[Message] = []
+    timestamp: str| None = None
+    reply_to_id: int | None = None
 
 class MessageCreate(Message):
     pass

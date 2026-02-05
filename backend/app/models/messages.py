@@ -8,7 +8,7 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True)
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=func.now())
+    timestamp = Column(DateTime, default=func.now())
     author = Column(String, nullable=False)
     reply_to_id = Column(Integer, ForeignKey('messages.id'))
 
