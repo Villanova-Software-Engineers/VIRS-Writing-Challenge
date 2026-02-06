@@ -1,1 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-background: oklch(100.00% 0.000 89.88);
+  --color-primary: oklch(56.70% 0.155 248.52);
+  --color-secondary: oklch(81.80% 0.080 225.19);
+  --color-accent: oklch(73.87% 0.015 238.09);
+  --color-text: oklch(11.83% 0.046 280.65);
+  --color-muted: oklch(10.11% 0.000 89.88);
+}
+
+body {
+  @apply bg-gradient-to-br from-primary/50 via-neutral-100 to-primary/50 m-0 p-0;
+}
+
+input,
+textarea,
+select {
+  color: var(--color-text);
+  background-color: var(--color-secondary);
+}
+
 html, body, #root { height: 100%; margin: 0; }

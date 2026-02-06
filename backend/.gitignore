@@ -2,5 +2,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 venv
+env
 .env
 firebase.json
+virs-writing-challenge-firebase-adminsdk-fbsvc-ba7d4e4575.json
