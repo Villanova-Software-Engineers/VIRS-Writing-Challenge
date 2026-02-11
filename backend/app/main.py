@@ -5,6 +5,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.core import settings, limiter, initialize_firebase
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_firebase()
