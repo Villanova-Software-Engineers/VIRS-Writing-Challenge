@@ -1,7 +1,8 @@
-import MessageBoard from './MessageBoard/MessageBoard';
-import './index.css';
+import "./App.css";
+import Home from "./components/Home";
+
 function App() {
-  return <MessageBoard />;
+  return <Home />;
 }
 
 export default App;
