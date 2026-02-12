@@ -56,9 +56,3 @@ button {
   transition: border-color 0.25s;
 }
 
-input,
-textarea,
-select {
-  color: var(--color-text);
-  background-color: var(--color-secondary);
-}
