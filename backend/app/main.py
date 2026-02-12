@@ -5,11 +5,13 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from .core import settings, limiter, initialize_firebase
 from .api import health_router
+from .api.semester import router as semesters_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_firebase()
     yield
+    
 app = FastAPI(
     title=settings.project_name,
     version="1.0.0",
@@ -28,6 +30,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router, prefix="/api")
+app.include_router(semesters_router, prefix="/api")
 
 @app.get("/")
 async def read_root():
