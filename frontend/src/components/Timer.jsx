@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import WarningPopup from './WarningPopup';
+import { useStreak } from '../context/StreakContext';
 
 function Timer({ onSessionSave, onTimerUpdate }) {
+  const { triggerIncrement } = useStreak();
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [description, setDescription] = useState('');
@@ -152,6 +154,12 @@ function Timer({ onSessionSave, onTimerUpdate }) {
       localStorage.setItem('timerIsRunning', 'true');
       setIsRunning(true);
       setError('');
+
+      // ── Streak increment ───────────────────────────────────────────────
+      // Only fires on the *first* start of the day. The context has a
+      // client-side 24-hour guard, and the backend enforces the same rule,
+      // so repeated start/stop cycles never double-count.
+      triggerIncrement();
     }
   };
 
@@ -201,20 +209,18 @@ function Timer({ onSessionSave, onTimerUpdate }) {
       <div className="flex flex-col items-center">
         {/* Status indicator */}
         <div className="mb-2">
-          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full ${
-            sessionSavedToday
+          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full ${sessionSavedToday
               ? 'bg-green-100 text-green-700'
               : isRunning
                 ? 'bg-red-100 text-red-600'
                 : 'bg-secondary/50 text-muted'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${
-              sessionSavedToday
+            }`}>
+            <span className={`w-2 h-2 rounded-full ${sessionSavedToday
                 ? 'bg-green-500'
                 : isRunning
                   ? 'bg-red-500 animate-pulse'
                   : 'bg-accent'
-            }`} />
+              }`} />
             {sessionSavedToday ? 'Session Saved' : isRunning ? 'Recording' : 'Ready'}
           </span>
         </div>
@@ -229,13 +235,12 @@ function Timer({ onSessionSave, onTimerUpdate }) {
           <button
             onClick={handleToggle}
             disabled={sessionSavedToday}
-            className={`px-8 py-3 text-background rounded-lg text-base font-semibold transition-all ${
-              sessionSavedToday
+            className={`px-8 py-3 text-background rounded-lg text-base font-semibold transition-all ${sessionSavedToday
                 ? 'bg-accent/50 cursor-not-allowed'
                 : isRunning
                   ? 'bg-red-500 hover:bg-red-600 cursor-pointer'
                   : 'bg-green-600 hover:bg-green-700 cursor-pointer'
-            }`}
+              }`}
           >
             {isRunning ? 'Stop' : 'Start'}
           </button>
@@ -275,11 +280,10 @@ function Timer({ onSessionSave, onTimerUpdate }) {
           <button
             onClick={handleSaveSession}
             disabled={sessionSavedToday}
-            className={`mt-3 py-3 text-background rounded-lg text-sm font-bold w-full transition-all ${
-              sessionSavedToday
+            className={`mt-3 py-3 text-background rounded-lg text-sm font-bold w-full transition-all ${sessionSavedToday
                 ? 'bg-accent/50 cursor-not-allowed'
                 : 'bg-primary hover:opacity-90 cursor-pointer'
-            }`}
+              }`}
           >
             {sessionSavedToday ? 'Session Saved for Today' : 'Save Session'}
           </button>

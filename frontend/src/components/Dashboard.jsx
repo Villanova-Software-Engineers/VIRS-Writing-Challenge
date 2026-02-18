@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import Timer from "./Timer";
+import { useStreak } from "../context/StreakContext";
 
 function Dashboard() {
-  const [streak, setStreak] = useState(null);
+  // Streak is managed globally via StreakContext
+  const { streak, isLoading: streakLoading } = useStreak();
   const [semester, setSemester] = useState(null);
   const [todayWritingTime, setTodayWritingTime] = useState(0);
   const [sessionSaved, setSessionSaved] = useState(false);
 
   useEffect(() => {
-    // TODO: GET /streaks/current → setStreak({ count, lastDate })
     // TODO: GET /semester/current → setSemester({ name, startDate, endDate })
-    // TODO: GET /sessions/today → check if session already exists today
+    // TODO: GET /sessions/today  → check if session already exists today
   }, []);
 
   const handleTimerUpdate = useCallback((seconds) => {
@@ -48,13 +49,12 @@ function Dashboard() {
             Session Status
           </div>
           <div
-            className={`text-2xl font-bold ${
-              sessionSaved
+            className={`text-2xl font-bold ${sessionSaved
                 ? "text-green-600"
                 : todayWritingTime > 0
                   ? "text-primary"
                   : "text-muted"
-            }`}
+              }`}
           >
             {sessionSaved
               ? "Completed"
@@ -69,9 +69,11 @@ function Dashboard() {
             Current Streak
           </div>
           <div className="text-2xl font-bold text-text">
-            {streak
-              ? `${streak.count} day${streak.count !== 1 ? "s" : ""}`
-              : "\u2014"}
+            {streakLoading
+              ? "—"
+              : streak > 0
+                ? `${streak} day${streak !== 1 ? "s" : ""} 🔥`
+                : "—"}
           </div>
         </div>
 

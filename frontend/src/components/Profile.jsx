@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
+import { useStreak } from "../context/StreakContext";
 
 function Profile() {
-  const [streak, setStreak] = useState(null);
+  // Streak is managed globally via StreakContext
+  const { streak, isLoading: streakLoading } = useStreak();
   const [semester, setSemester] = useState(null);
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
-    // TODO: GET /streaks/current → setStreak({ count, lastDate })
     // TODO: GET /semester/current → setSemester({ name, startDate, endDate })
-    // TODO: GET /sessions → setSessions([...]) — fetch user's session history
+    // TODO: GET /sessions        → setSessions([...]) — fetch user's session history
 
     const saved = JSON.parse(localStorage.getItem("writingSessions") || "[]");
     setSessions(saved);
@@ -71,10 +72,14 @@ function Profile() {
         </div>
         <div className="bg-background rounded-xl shadow p-6">
           <div className="text-sm font-semibold text-muted uppercase tracking-wide mb-2">
-            Longest Streak
+            Current Streak
           </div>
           <div className="text-2xl font-bold text-text">
-            {streak ? `${streak.count} days` : "0"}
+            {streakLoading
+              ? "—"
+              : streak > 0
+                ? `${streak} day${streak !== 1 ? "s" : ""} 🔥`
+                : "0"}
           </div>
         </div>
         <div className="bg-background rounded-xl shadow p-6">
