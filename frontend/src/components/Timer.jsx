@@ -1,29 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
 import WarningPopup from './WarningPopup';
 
-function Timer() {
+function Timer({ onSessionSave, onTimerUpdate }) {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [description, setDescription] = useState('');
   const [sessionSavedToday, setSessionSavedToday] = useState(false);
-  const [savedSessions, setSavedSessions] = useState([]);
   const [error, setError] = useState('');
 
   const startTimeRef = useRef(null);
   const pausedTimeRef = useRef(0);
 
-  // Get current EST date string for daily tracking
   const getESTDateString = () => {
     const now = new Date();
     const estDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-    return estDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    return estDate.toISOString().split('T')[0];
   };
 
   // Check if already saved today
   useEffect(() => {
     const sessions = JSON.parse(localStorage.getItem('writingSessions') || '[]');
-    setSavedSessions(sessions);
-
     const todayDate = getESTDateString();
     const savedToday = sessions.some(session => session.date === todayDate);
     setSessionSavedToday(savedToday);
@@ -64,46 +60,44 @@ function Timer() {
       const hours = estTime.getHours();
       const minutes = estTime.getMinutes();
 
-      // Hard cutoff at 11:59 PM EST
       if (hours === 23 && minutes === 59 && isRunning) {
         handleStop();
         setError('Timer automatically stopped at 11:59 PM EST cutoff');
       }
 
-      // Auto-reset at midnight (12:00 AM EST)
       if (hours === 0 && minutes === 0) {
         handleReset();
         setSessionSavedToday(false);
       }
     };
 
-    const interval = setInterval(checkTimeLimits, 30000); // Check every 30 seconds
+    const interval = setInterval(checkTimeLimits, 30000);
     return () => clearInterval(interval);
   }, [isRunning]);
 
   // Timer interval
   useEffect(() => {
     let interval = null;
-
     if (isRunning) {
       interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTimeRef.current - pausedTimeRef.current) / 1000);
         setSeconds(elapsed);
       }, 1000);
     }
-
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) clearInterval(interval);
     };
   }, [isRunning]);
+
+  // Notify parent of timer updates
+  useEffect(() => {
+    if (onTimerUpdate) onTimerUpdate(seconds);
+  }, [seconds, onTimerUpdate]);
 
   const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
-
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
@@ -113,9 +107,8 @@ function Timer() {
 
   const handleDescriptionChange = (e) => {
     const newText = e.target.value;
-    const wordCount = countWords(newText);
-
-    if (wordCount <= 10) {
+    const wc = countWords(newText);
+    if (wc <= 10) {
       setDescription(newText);
       localStorage.setItem('timerDescription', newText);
       setError('');
@@ -131,8 +124,6 @@ function Timer() {
     setIsRunning(false);
     setDescription('');
     setError('');
-
-    // Clear localStorage
     localStorage.removeItem('timerStartTime');
     localStorage.removeItem('timerPausedTime');
     localStorage.removeItem('timerIsRunning');
@@ -141,8 +132,6 @@ function Timer() {
 
   const handleStop = () => {
     if (!isRunning) return;
-
-    // Stopping - save the elapsed time
     pausedTimeRef.current = Date.now() - startTimeRef.current - pausedTimeRef.current;
     localStorage.setItem('timerPausedTime', pausedTimeRef.current.toString());
     localStorage.setItem('timerIsRunning', 'false');
@@ -153,13 +142,10 @@ function Timer() {
     if (isRunning) {
       handleStop();
     } else {
-      // Starting - initialize or adjust start time
       if (startTimeRef.current === null) {
-        // First start - initialize
         startTimeRef.current = Date.now();
         pausedTimeRef.current = 0;
       } else {
-        // Resuming - adjust start time to account for paused duration
         startTimeRef.current = Date.now() - pausedTimeRef.current;
       }
       localStorage.setItem('timerStartTime', startTimeRef.current.toString());
@@ -170,34 +156,25 @@ function Timer() {
   };
 
   const handleSaveSession = () => {
-    // Validation
     if (sessionSavedToday) {
       setError('You have already saved a session today. Only one session per day is allowed.');
       return;
     }
-
     if (seconds === 0) {
       setError('Cannot save a session with 0 time');
       return;
     }
-
     if (!description.trim()) {
       setError('Description is required to save session');
       return;
     }
-
-    const wordCount = countWords(description);
-    if (wordCount > 10) {
+    if (countWords(description) > 10) {
       setError('Description must be 10 words or less');
       return;
     }
 
-    // Stop timer if running
-    if (isRunning) {
-      handleStop();
-    }
+    if (isRunning) handleStop();
 
-    // Save session
     const session = {
       date: getESTDateString(),
       duration: seconds,
@@ -209,14 +186,11 @@ function Timer() {
     sessions.push(session);
     localStorage.setItem('writingSessions', JSON.stringify(sessions));
 
-    setSavedSessions(sessions);
     setSessionSavedToday(true);
-
-    // Reset timer after saving
     handleReset();
-
     setError('');
-    alert('Session saved successfully!');
+
+    if (onSessionSave) onSessionSave(session);
   };
 
   const wordCount = countWords(description);
@@ -224,136 +198,92 @@ function Timer() {
   return (
     <>
       <WarningPopup />
-      <div style={{ textAlign: 'center', padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ fontSize: '48px', fontWeight: 'bold', margin: '20px 0' }}>
+      <div className="flex flex-col items-center">
+        {/* Status indicator */}
+        <div className="mb-2">
+          <span className={`inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full ${
+            sessionSavedToday
+              ? 'bg-green-100 text-green-700'
+              : isRunning
+                ? 'bg-red-100 text-red-600'
+                : 'bg-secondary/50 text-muted'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${
+              sessionSavedToday
+                ? 'bg-green-500'
+                : isRunning
+                  ? 'bg-red-500 animate-pulse'
+                  : 'bg-accent'
+            }`} />
+            {sessionSavedToday ? 'Session Saved' : isRunning ? 'Recording' : 'Ready'}
+          </span>
+        </div>
+
+        {/* Timer display */}
+        <div className="text-6xl font-bold text-text tabular-nums my-4 font-mono">
           {formatTime(seconds)}
         </div>
 
-        {sessionSavedToday && (
-          <div style={{
-            backgroundColor: '#fff3cd',
-            color: '#856404',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '15px'
-          }}>
-            You have already saved a session today
-          </div>
-        )}
-
-        {error && (
-          <div style={{
-            backgroundColor: '#f8d7da',
-            color: '#721c24',
-            padding: '10px',
-            borderRadius: '4px',
-            marginBottom: '15px'
-          }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{ marginBottom: '20px' }}>
+        {/* Controls */}
+        <div className="flex gap-3 mb-6">
           <button
             onClick={handleToggle}
-            style={{
-              margin: '0 10px',
-              padding: '10px 20px',
-              backgroundColor: isRunning ? '#dc3545' : '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
+            disabled={sessionSavedToday}
+            className={`px-8 py-3 text-background rounded-lg text-base font-semibold transition-all ${
+              sessionSavedToday
+                ? 'bg-accent/50 cursor-not-allowed'
+                : isRunning
+                  ? 'bg-red-500 hover:bg-red-600 cursor-pointer'
+                  : 'bg-green-600 hover:bg-green-700 cursor-pointer'
+            }`}
           >
             {isRunning ? 'Stop' : 'Start'}
           </button>
           <button
             onClick={handleReset}
-            style={{
-              margin: '0 10px',
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
+            className="px-6 py-3 bg-secondary text-text rounded-lg text-base font-semibold hover:bg-secondary/80 transition-all cursor-pointer"
           >
-            Reset (Test)
+            Reset
           </button>
         </div>
 
-        <div style={{ marginTop: '30px', textAlign: 'left' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Session Description (Required - Max 10 words):
+        {/* Error */}
+        {error && (
+          <div className="w-full max-w-md bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Description + Save */}
+        <div className="w-full max-w-md">
+          <label className="block mb-1.5 font-semibold text-text text-sm">
+            Session Description
+            <span className="font-normal text-muted ml-1">(max 10 words)</span>
           </label>
           <input
             type="text"
             value={description}
             onChange={handleDescriptionChange}
-            placeholder="Describe your writing session..."
+            placeholder="What did you write about today?"
             disabled={sessionSavedToday}
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontSize: '16px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-              boxSizing: 'border-box'
-            }}
+            className="w-full p-3 text-sm rounded-lg border border-accent/30 focus:border-primary focus:outline-none disabled:opacity-40"
           />
-          <div style={{
-            fontSize: '12px',
-            color: wordCount > 10 ? '#dc3545' : '#6c757d',
-            marginTop: '5px'
-          }}>
+          <div className={`text-xs mt-1 text-right ${wordCount > 8 ? (wordCount > 10 ? 'text-red-500' : 'text-yellow-600') : 'text-muted'}`}>
             {wordCount}/10 words
           </div>
+
+          <button
+            onClick={handleSaveSession}
+            disabled={sessionSavedToday}
+            className={`mt-3 py-3 text-background rounded-lg text-sm font-bold w-full transition-all ${
+              sessionSavedToday
+                ? 'bg-accent/50 cursor-not-allowed'
+                : 'bg-primary hover:opacity-90 cursor-pointer'
+            }`}
+          >
+            {sessionSavedToday ? 'Session Saved for Today' : 'Save Session'}
+          </button>
         </div>
-
-        <button
-          onClick={handleSaveSession}
-          disabled={sessionSavedToday}
-          style={{
-            marginTop: '20px',
-            padding: '12px 30px',
-            backgroundColor: sessionSavedToday ? '#6c757d' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: sessionSavedToday ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            width: '100%'
-          }}
-        >
-          Save Session
-        </button>
-
-        {savedSessions.length > 0 && (
-          <div style={{ marginTop: '40px', textAlign: 'left' }}>
-            <h3>Saved Sessions</h3>
-            {savedSessions.slice().reverse().map((session, index) => (
-              <div
-                key={index}
-                style={{
-                  backgroundColor: '#f8f9fa',
-                  padding: '15px',
-                  marginBottom: '10px',
-                  borderRadius: '4px',
-                  border: '1px solid #dee2e6'
-                }}
-              >
-                <div style={{ fontWeight: 'bold' }}>{session.date}</div>
-                <div>Duration: {formatTime(session.duration)}</div>
-                <div style={{ fontStyle: 'italic', color: '#6c757d' }}>"{session.description}"</div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );
