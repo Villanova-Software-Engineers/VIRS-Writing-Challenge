@@ -4,7 +4,6 @@ import { FaComments, FaFireAlt, FaShieldAlt, FaTrophy, FaPen } from 'react-icons
 import InputField from '../components/HorizonInputField';
 import { AuthService } from '../services/auth.service';
 import ThemeToggle from '../components/ThemeToggle';
-import novaLogo from '../../assets/novalogo.png';
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,7 +60,6 @@ const SignInPage: React.FC = () => {
         <div className="absolute -bottom-40 -left-24 size-90 rounded-full bg-secondary/20 blur-[90px] opacity-50" />
 
         <div className="relative z-10 max-w-xl">
-          <img src={novaLogo} alt="Villanova University" className="h-14 w-auto mb-6" />
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2.5 text-[13px] text-text tracking-wide">
             <span>VIRS Writing Challenge</span>
             <span className="text-primary">Villanova · Spring 2026</span>
@@ -104,7 +102,6 @@ const SignInPage: React.FC = () => {
       <section className="flex items-center justify-center p-12 max-lg:p-6">
         <div className="w-full max-w-[560px] rounded-[22px] border border-accent/20 bg-background p-7 shadow-xl backdrop-blur-xl">
           <div className="mb-4">
-            <img src={novaLogo} alt="Villanova University" className="h-9 w-auto mb-4" />
             <h2 className="mt-2.5 mb-1.5 text-[26px] font-bold">Sign in to your account</h2>
             <p className="text-muted">
               Enter your credentials to access the writing challenge.
