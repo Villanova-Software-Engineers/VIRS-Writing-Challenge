@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaComments, FaClock, FaFireAlt, FaShieldAlt, FaTrophy, FaUniversity } from 'react-icons/fa';
+import { FaComments, FaFireAlt, FaShieldAlt, FaTrophy, FaPen } from 'react-icons/fa';
 import InputField from '../components/HorizonInputField';
 import { AuthService } from '../services/auth.service';
 import ThemeToggle from '../components/ThemeToggle';
+import novaLogo from '../../assets/novalogo.png';
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ const SignInPage: React.FC = () => {
         <div className="absolute -bottom-40 -left-24 size-90 rounded-full bg-secondary/20 blur-[90px] opacity-50" />
 
         <div className="relative z-10 max-w-xl">
+          <img src={novaLogo} alt="Villanova University" className="h-14 w-auto mb-6" />
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2.5 text-[13px] text-text tracking-wide">
             <span>VIRS Writing Challenge</span>
             <span className="text-primary">Villanova · Spring 2026</span>
@@ -69,21 +71,14 @@ const SignInPage: React.FC = () => {
             Villanova Writing Tracker for faculty &amp; post-docs.
           </h1>
           <p className="mt-4 max-w-xl text-[16px] leading-7 text-muted">
-            The Villanova Writing Tracker is a web-based application designed to support a trust-based writing challenge
-            for faculty and post-docs. The system tracks writing time through a start/stop timer, supports streaks and
-            leaderboards, and provides a single shared message board per semester. The application emphasizes simplicity,
-            transparency, and administrative control, with minimal automated enforcement beyond time tracking. The system
-            is intended for small cohorts (~50 users), is semester-based, and uses Villanova branding throughout the UI.
+            Track daily writing sessions, build streaks, and stay motivated alongside your Villanova colleagues—all in one
+            simple, transparent, semester-based platform built on trust.
           </p>
 
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-sm">
             <span className="inline-flex items-center gap-2 text-text/90">
-              <FaUniversity className="text-base text-primary" aria-hidden="true" />
-              Villanova
-            </span>
-            <span className="inline-flex items-center gap-2 text-text/90">
-              <FaClock className="text-base text-primary" aria-hidden="true" />
-              Timer
+              <FaPen className="text-base text-primary" aria-hidden="true" />
+              Daily Writing
             </span>
             <span className="inline-flex items-center gap-2 text-text/90">
               <FaFireAlt className="text-base text-primary" aria-hidden="true" />
@@ -109,6 +104,7 @@ const SignInPage: React.FC = () => {
       <section className="flex items-center justify-center p-12 max-lg:p-6">
         <div className="w-full max-w-[560px] rounded-[22px] border border-accent/20 bg-background p-7 shadow-xl backdrop-blur-xl">
           <div className="mb-4">
+            <img src={novaLogo} alt="Villanova University" className="h-9 w-auto mb-4" />
             <h2 className="mt-2.5 mb-1.5 text-[26px] font-bold">Sign in to your account</h2>
             <p className="text-muted">
               Enter your credentials to access the writing challenge.

@@ -269,7 +269,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
           onChange={handleChange}
           onBlur={handleBlur}
           disabled={isLoading}
-          className={`w-full rounded-[14px] border bg-background px-3.5 py-3 text-sm text-text transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,75,145,0.18)] focus:outline-none ${
+          className={`w-full rounded-[14px] border bg-background px-3.5 py-3 text-sm text-text transition-all hover:border-primary/40 focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,75,145,0.18)] focus:outline-none ${
             errors.department ? 'border-red-400/50 shadow-[0_0_0_4px_rgba(248,113,113,0.12)]' : 'border-accent/20'
           } ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
