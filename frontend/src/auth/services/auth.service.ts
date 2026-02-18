@@ -19,23 +19,60 @@ import type {
 } from '../types/auth.types';
 
 export class AuthService {
+  private static buildFallbackUser(firebaseUser: FirebaseUser): User {
+    const displayNameParts = (firebaseUser.displayName || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = displayNameParts[0] || 'Villanova';
+    const lastName = displayNameParts.slice(1).join(' ') || 'Writer';
+
+    return {
+      id: firebaseUser.uid,
+      email: firebaseUser.email || '',
+      firstName,
+      lastName,
+      department: 'Not set',
+      firebase_uid: firebaseUser.uid,
+      isAdmin: false,
+      emailVerified: firebaseUser.emailVerified,
+      createdAt: new Date(),
+    };
+  }
+
   // Sign in with email and password
   static async signIn(credentials: SignInRequest): Promise<AuthResponse> {
     await authReady;
     const { email, password } = credentials;
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const firebaseUser = userCredential.user;
+    await firebaseUser.reload();
 
     // Check if email is verified
     if (!firebaseUser.emailVerified) {
+      await firebaseSignOut(auth);
       throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
     }
 
-    // Get user profile from Firestore
-    const userProfile = await this.getUserProfile(firebaseUser.uid);
+    let userProfile: User | null = null;
+    try {
+      userProfile = await this.getUserProfile(firebaseUser.uid);
+    } catch (error) {
+      console.warn('[AuthService] Firestore profile read failed during sign-in, using fallback profile:', error);
+    }
 
     if (!userProfile) {
-      throw new Error('User profile not found. Please contact support.');
+      userProfile = this.buildFallbackUser(firebaseUser);
+      // Best-effort profile backfill for users missing docs.
+      this.createUserProfile({
+        id: userProfile.id,
+        email: userProfile.email,
+        firstName: userProfile.firstName,
+        lastName: userProfile.lastName,
+        department: userProfile.department,
+        firebase_uid: userProfile.firebase_uid,
+        isAdmin: false,
+        emailVerified: firebaseUser.emailVerified,
+      }).catch((error) => {
+        console.warn('[AuthService] Firestore profile backfill failed:', error);
+      });
     }
 
     return {
@@ -49,65 +86,45 @@ export class AuthService {
     await authReady;
     const { email, password, firstName, lastName, department } = userData;
 
-    try {
-      console.log('[AuthService] Starting signup process for:', email);
-      
-      // Create Firebase auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      console.log('[AuthService] Firebase user created:', firebaseUser.uid);
+    // Create Firebase auth user — this is the critical step.
+    // Once this succeeds the account exists and we can show success immediately.
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const firebaseUser = userCredential.user;
 
-      // Update display name
-      await updateProfile(firebaseUser, { 
-        displayName: `${firstName} ${lastName}` 
+    const user: Omit<User, 'createdAt'> = {
+      id: firebaseUser.uid,
+      email: firebaseUser.email!,
+      firstName,
+      lastName,
+      department,
+      firebase_uid: firebaseUser.uid,
+      isAdmin: false,
+      emailVerified: false,
+    };
+
+    // Require verification email send to succeed before returning success to UI.
+    await sendEmailVerification(firebaseUser, {
+      url: window.location.origin + '/auth/verify-email',
+      handleCodeInApp: false,
+    });
+
+    // Continue profile tasks in background.
+    Promise.allSettled([
+      updateProfile(firebaseUser, { displayName: `${firstName} ${lastName}` }),
+      this.createUserProfile(user),
+    ]).then((results) => {
+      results.forEach((r, i) => {
+        if (r.status === 'rejected') {
+          console.error(`[AuthService] Background task ${i} failed:`, r.reason);
+        }
       });
-      console.log('[AuthService] Display name updated');
+    });
 
-      // Send email verification with action code settings
-      try {
-        await sendEmailVerification(firebaseUser, {
-          url: window.location.origin + '/auth/verify-email',
-          handleCodeInApp: false,
-        });
-        console.log('[AuthService] ✅ Email verification sent successfully to:', email);
-      } catch (emailError: any) {
-        console.error('[AuthService] ❌ Failed to send verification email:', emailError);
-        console.error('[AuthService] Email error code:', emailError.code);
-        console.error('[AuthService] Email error message:', emailError.message);
-        // Don't throw - we still want to create the account
-      }
-
-      // Create user profile in Firestore (Users collection)
-      const user: Omit<User, 'createdAt'> = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email!,
-        firstName,
-        lastName,
-        department,
-        firebase_uid: firebaseUser.uid,
-        isAdmin: false, // Default: is_admin = false
-        emailVerified: false,
-      };
-
-      await this.createUserProfile(user);
-      console.log('[AuthService] User profile created in Firestore');
-
-      return {
-        success: true,
-        user: { ...user, createdAt: new Date() },
-        message: 'Account created! Please check your email (and spam folder) to verify your account.',
-      };
-    } catch (error: any) {
-      console.error('[AuthService] Signup error:', error);
-      console.error('[AuthService] Error code:', error.code);
-      console.error('[AuthService] Error message:', error.message);
-      
-      // Clean up Firebase auth user if Firestore creation fails
-      if (auth.currentUser) {
-        await auth.currentUser.delete().catch(console.error);
-      }
-      throw error;
-    }
+    return {
+      success: true,
+      user: { ...user, createdAt: new Date() },
+      message: 'Account created and verification email sent. Please check your inbox (and spam folder).',
+    };
   }
 
   // Create user profile in Firestore
@@ -165,9 +182,9 @@ export class AuthService {
         url: window.location.origin + '/auth/verify-email',
         handleCodeInApp: false,
       });
-      console.log('[AuthService] ✅ Verification email resent successfully');
+      console.log('[AuthService] Verification email resent successfully');
     } catch (error: any) {
-      console.error('[AuthService] ❌ Failed to resend verification email:', error);
+      console.error('[AuthService] Failed to resend verification email:', error);
       console.error('[AuthService] Error code:', error.code);
       throw error;
     }

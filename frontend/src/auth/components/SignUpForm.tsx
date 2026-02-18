@@ -26,9 +26,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [sentToEmail, setSentToEmail] = useState('');
+  const [signUpMessage, setSignUpMessage] = useState('');
 
-  // Validate name (at least 2 characters, letters only)
   const validateName = (name: string, fieldName: string): string => {
     if (!name.trim()) return `${fieldName} is required`;
     if (name.trim().length < 2) return `${fieldName} must be at least 2 characters`;
@@ -36,7 +36,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
     return '';
   };
 
-  // Validate department selection
   const validateDepartment = (): string => {
     if (!formData.department) return 'Please select a department';
     if (formData.department === 'Other' && !formData.customDepartment.trim()) {
@@ -45,18 +44,14 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
     return '';
   };
 
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
-    
-    // Clear error for this field when user starts typing
     if (errors[id as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [id]: '' }));
     }
   };
 
-  // Handle blur events for real-time validation
   const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     let error = '';
@@ -92,7 +87,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
     }
   };
 
-  // Validate entire form
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -103,7 +97,6 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
     newErrors.confirmPassword = validateConfirmPassword(formData.password, formData.confirmPassword);
     newErrors.department = validateDepartment();
 
-    // Remove empty error messages
     Object.keys(newErrors).forEach(key => {
       if (!newErrors[key as keyof FormErrors]) {
         delete newErrors[key as keyof FormErrors];
@@ -114,21 +107,19 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccessMessage('');
 
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
+    setErrors({});
 
     try {
-      // Determine final department value
-      const finalDepartment = formData.department === 'Other' 
-        ? formData.customDepartment.trim() 
+      const finalDepartment = formData.department === 'Other'
+        ? formData.customDepartment.trim()
         : formData.department;
 
       const response = await AuthService.signUp({
@@ -139,69 +130,69 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
         department: finalDepartment,
       });
 
-      setSuccessMessage(response.message || 'Account created successfully!');
-      
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        department: '',
-        customDepartment: '',
-      });
+      setSentToEmail(formData.email.trim());
+      setSignUpMessage(response.message || 'Account created and verification email sent.');
 
-      // Call success callback or navigate
       if (onSuccess) {
         onSuccess();
-      } else {
-        // Navigate to email verification page after 2 seconds
-        setTimeout(() => {
-          navigate('/auth/verify-email');
-        }, 2000);
       }
     } catch (error: any) {
-      let errorMessage = 'Failed to create account. Please try again.';
-      
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered. Please sign in instead.';
-        setErrors(prev => ({ ...prev, email: errorMessage }));
+        setErrors(prev => ({ ...prev, email: 'This email is already registered. Please sign in instead.' }));
       } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'Password is too weak. Please use a stronger password.';
-        setErrors(prev => ({ ...prev, password: errorMessage }));
+        setErrors(prev => ({ ...prev, password: 'Password is too weak. Please use a stronger password.' }));
       } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'Invalid email address.';
-        setErrors(prev => ({ ...prev, email: errorMessage }));
+        setErrors(prev => ({ ...prev, email: 'Invalid email address.' }));
       } else {
-        setErrors(prev => ({ ...prev, email: error.message || errorMessage }));
+        setErrors(prev => ({ ...prev, email: error.message || 'Failed to create account. Please try again.' }));
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      {successMessage && (
-        <div className="alert success">{successMessage}</div>
-      )}
+  if (sentToEmail) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-4 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-green-500/10 text-3xl">
+          &#9993;
+        </div>
+        <h3 className="text-lg font-bold text-text">Check your email</h3>
+        <p className="max-w-sm rounded-[12px] border border-green-400/30 bg-green-500/5 px-3 py-2 text-sm text-green-700">
+          {signUpMessage}
+        </p>
+        <p className="max-w-sm text-sm text-muted">
+          We sent a verification link to <span className="font-semibold text-text">{sentToEmail}</span>.
+          Click the link in your inbox (check spam too), then sign in.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="mt-2 w-full rounded-[14px] bg-gradient-to-r from-primary to-primary/75 px-3 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-primary/20 transition-transform hover:-translate-y-px hover:shadow-xl hover:shadow-primary/25 active:translate-y-0"
+        >
+          Go to sign in
+        </button>
+      </div>
+    );
+  }
 
-      <div className="field-row two">
+  return (
+    <form onSubmit={handleSubmit} className="mt-1.5 flex flex-col gap-3.5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
         <div>
           <InputField
             variant="auth"
             label="First name"
             id="firstName"
             type="text"
-            placeholder="Owen"
+            placeholder="Jane"
             value={formData.firstName}
             onChange={handleChange}
             onBlur={handleBlur}
             state={errors.firstName ? 'error' : undefined}
             disabled={isLoading}
           />
-          {errors.firstName && <p className="field-error">{errors.firstName}</p>}
+          {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
         </div>
 
         <div>
@@ -210,18 +201,18 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
             label="Last name"
             id="lastName"
             type="text"
-            placeholder="Fox"
+            placeholder="Doe"
             value={formData.lastName}
             onChange={handleChange}
             onBlur={handleBlur}
             state={errors.lastName ? 'error' : undefined}
             disabled={isLoading}
           />
-          {errors.lastName && <p className="field-error">{errors.lastName}</p>}
+          {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
         </div>
       </div>
 
-      <div className="field-row">
+      <div className="flex flex-col gap-1.5">
         <InputField
           variant="auth"
           label="Work email"
@@ -234,10 +225,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
           state={errors.email ? 'error' : undefined}
           disabled={isLoading}
         />
-        {errors.email && <p className="field-error">{errors.email}</p>}
+        {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
       </div>
 
-      <div className="field-row">
+      <div className="flex flex-col gap-1.5">
         <InputField
           variant="auth"
           label="Password"
@@ -250,11 +241,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
           state={errors.password ? 'error' : undefined}
           disabled={isLoading}
         />
-        {errors.password && <p className="field-error">{errors.password}</p>}
-        <p className="field-note">Use at least 1 upper, 1 number, and 1 special character.</p>
+        {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+        <p className="text-xs text-muted">Use at least 1 upper, 1 number, and 1 special character.</p>
       </div>
 
-      <div className="field-row">
+      <div className="flex flex-col gap-1.5">
         <InputField
           variant="auth"
           label="Confirm password"
@@ -267,18 +258,20 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
           state={errors.confirmPassword ? 'error' : undefined}
           disabled={isLoading}
         />
-        {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
+        {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
       </div>
 
-      <div className="field-row">
-        <label htmlFor="department" className="auth-label">Department</label>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="department" className="block text-xs font-semibold text-muted tracking-wide">Department</label>
         <select
           id="department"
           value={formData.department}
           onChange={handleChange}
           onBlur={handleBlur}
           disabled={isLoading}
-          className={`auth-select ${errors.department ? 'is-error' : ''} ${isLoading ? 'is-disabled' : ''}`}
+          className={`w-full rounded-[14px] border bg-background px-3.5 py-3 text-sm text-text transition-all focus:border-primary focus:shadow-[0_0_0_4px_rgba(0,75,145,0.18)] focus:outline-none ${
+            errors.department ? 'border-red-400/50 shadow-[0_0_0_4px_rgba(248,113,113,0.12)]' : 'border-accent/20'
+          } ${isLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
           <option value="">Select a department</option>
           {DEPARTMENTS.map((dept) => (
@@ -287,11 +280,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
             </option>
           ))}
         </select>
-        {errors.department && <p className="field-error">{errors.department}</p>}
+        {errors.department && <p className="text-xs text-red-500">{errors.department}</p>}
       </div>
 
       {formData.department === 'Other' && (
-        <div className="field-row">
+        <div className="flex flex-col gap-1.5">
           <InputField
             variant="auth"
             label="Enter your department"
@@ -304,20 +297,24 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
             state={errors.customDepartment ? 'error' : undefined}
             disabled={isLoading}
           />
-          {errors.customDepartment && <p className="field-error">{errors.customDepartment}</p>}
+          {errors.customDepartment && <p className="text-xs text-red-500">{errors.customDepartment}</p>}
         </div>
       )}
 
-      <button type="submit" disabled={isLoading} className="primary-btn">
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="w-full rounded-[14px] bg-gradient-to-r from-primary to-primary/75 px-3 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-primary/20 transition-transform hover:-translate-y-px hover:shadow-xl hover:shadow-primary/25 active:translate-y-0 disabled:opacity-65 disabled:shadow-none"
+      >
         {isLoading ? 'Creating your account…' : 'Create account'}
       </button>
 
-      <p className="muted-text">
+      <p className="text-center text-sm text-muted">
         Already have an account?{' '}
         <button
           type="button"
-          onClick={() => navigate('/auth/sign-in')}
-          className="link-btn"
+          onClick={() => navigate('/')}
+          className="border-none bg-transparent p-0 font-semibold text-primary cursor-pointer"
         >
           Sign in
         </button>

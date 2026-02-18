@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthService } from '../services/auth.service';
-import '../styles/auth.css';
+import ThemeToggle from './ThemeToggle';
 
 const EmailVerificationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -65,12 +65,15 @@ const EmailVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="auth-panel" style={{ minHeight: '100vh' }}>
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-eyebrow">Email verification</div>
-          <h2 className="auth-title">{isVerified ? 'All set!' : 'Check your inbox'}</h2>
-          <p className="auth-subtitle">
+    <div className="flex min-h-screen items-center justify-center p-12 text-text tracking-tight max-lg:p-6">
+      <ThemeToggle />
+      <div className="w-full max-w-[560px] rounded-[22px] border border-accent/20 bg-background p-7 shadow-xl backdrop-blur-xl">
+        <div className="mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+            Email verification
+          </span>
+          <h2 className="mt-2.5 mb-1.5 text-[26px] font-bold">{isVerified ? 'All set!' : 'Check your inbox'}</h2>
+          <p className="text-muted">
             {isVerified
               ? 'Your email is verified. Continue to sign in.'
               : `We sent a link to ${userEmail || 'your email address'}. Click it, then confirm below.`}
@@ -78,42 +81,46 @@ const EmailVerificationPage: React.FC = () => {
         </div>
 
         {message && (
-          <div className={`alert ${isVerified || message.includes('sent') ? 'success' : 'error'}`}>
+          <div className={`mb-3 rounded-[14px] border p-3 text-[13px] ${
+            isVerified || message.includes('sent')
+              ? 'border-green-400/30 bg-green-500/5 text-green-600'
+              : 'border-red-400/30 bg-red-500/5 text-red-600'
+          }`}>
             {message}
           </div>
         )}
 
         {!isVerified ? (
-          <div className="auth-form">
+          <div className="mt-1.5 flex flex-col gap-3.5">
             <button
               onClick={handleCheckVerification}
               disabled={isChecking}
-              className="primary-btn"
               type="button"
+              className="w-full rounded-[14px] bg-gradient-to-r from-primary to-primary/75 px-3 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-primary/20 transition-transform hover:-translate-y-px hover:shadow-xl hover:shadow-primary/25 active:translate-y-0 disabled:opacity-65 disabled:shadow-none"
             >
               {isChecking ? 'Checking…' : "I've verified my email"}
             </button>
             <button
               onClick={handleResendEmail}
               disabled={isResending}
-              className="secondary-btn"
               type="button"
+              className="w-full rounded-[14px] border border-accent/20 bg-text/5 px-3 py-3 text-sm font-semibold text-text transition-all hover:border-text/20 hover:bg-text/10 disabled:opacity-65 disabled:cursor-not-allowed"
             >
               {isResending ? 'Sending…' : 'Resend verification email'}
             </button>
             <button
               onClick={handleBackToSignIn}
               type="button"
-              className="link-btn"
+              className="border-none bg-transparent p-0 font-semibold text-primary cursor-pointer"
             >
-              ← Back to sign in
+              &larr; Back to sign in
             </button>
           </div>
         ) : (
           <button
             onClick={handleBackToSignIn}
-            className="primary-btn"
             type="button"
+            className="w-full rounded-[14px] bg-gradient-to-r from-primary to-primary/75 px-3 py-3.5 text-[15px] font-bold text-white shadow-lg shadow-primary/20 transition-transform hover:-translate-y-px hover:shadow-xl hover:shadow-primary/25 active:translate-y-0 disabled:opacity-65 disabled:shadow-none"
           >
             Go to sign in
           </button>

@@ -383,7 +383,7 @@ export default function Setup() {
 
             <div style={styles.verifyBox}>
               <div style={styles.verifyRow}>
-                <div style={styles.verifyTitle}>Didn’t get it?</div>
+                <div style={styles.verifyTitle}>Didn't get it?</div>
                 <button
                   type="button"
                   style={secondaryButtonStyle(submitting)}
@@ -406,7 +406,7 @@ export default function Setup() {
               </button>
 
               <div style={styles.smallNote}>
-                We’ll confirm your status from Firebase — click after you finish verification.
+                We'll confirm your status from Firebase — click after you finish verification.
               </div>
             </div>
 
@@ -422,7 +422,7 @@ export default function Setup() {
 
         {step === "done" && (
           <div>
-            <h2 style={styles.h2}>You’re all set ✅</h2>
+            <h2 style={styles.h2}>You're all set</h2>
             <p style={styles.p}>
               Email verified and account created. Next step: route into the app.
             </p>
@@ -437,8 +437,7 @@ export default function Setup() {
 }
 
 /**
- * Styles: simple “Finlit-like” clean card
- * You can move these into App.css later if you prefer.
+ * Styles: using CSS variables for theme compatibility
  */
 const styles = {
   page: {
@@ -447,19 +446,19 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     padding: "28px 16px",
-    background: "linear-gradient(180deg, #0b1220 0%, #070b14 100%)",
-    color: "#e7edf7",
+    background: "var(--bg)",
+    color: "var(--text-strong)",
     fontFamily:
       'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
   },
   card: {
     width: "100%",
     maxWidth: 520,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.10)",
+    background: "var(--card)",
+    border: "1px solid var(--stroke)",
     borderRadius: 18,
     padding: 22,
-    boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+    boxShadow: "var(--shadow)",
     backdropFilter: "blur(10px)",
   },
   header: { display: "flex", gap: 12, alignItems: "center", marginBottom: 14 },
@@ -467,11 +466,11 @@ const styles = {
     width: 12,
     height: 12,
     borderRadius: 999,
-    background: "#7c3aed",
-    boxShadow: "0 0 0 6px rgba(124,58,237,0.18)",
+    background: "var(--brand)",
+    boxShadow: "0 0 0 6px rgba(0,75,145,0.18)",
   },
   title: { margin: 0, fontSize: 22, lineHeight: "28px" },
-  subtitle: { margin: "4px 0 0 0", opacity: 0.8, fontSize: 13 },
+  subtitle: { margin: "4px 0 0 0", color: "var(--text-soft)", fontSize: 13 },
 
   banner: {
     marginTop: 12,
@@ -482,31 +481,33 @@ const styles = {
     lineHeight: "18px",
   },
   bannerError: {
-    background: "rgba(239,68,68,0.12)",
-    border: "1px solid rgba(239,68,68,0.35)",
+    background: "var(--error-bg)",
+    border: "1px solid var(--error-border)",
+    color: "var(--error-text)",
   },
   bannerInfo: {
-    background: "rgba(34,197,94,0.10)",
-    border: "1px solid rgba(34,197,94,0.30)",
+    background: "var(--success-bg)",
+    border: "1px solid var(--success-border)",
+    color: "var(--success-text)",
   },
 
   grid2: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
   block: { marginTop: 12 },
 
-  label: { display: "block", fontSize: 12, opacity: 0.9, marginBottom: 6 },
-  hint: { fontSize: 12, opacity: 0.65, marginTop: 6 },
-  err: { marginTop: 6, fontSize: 12, color: "#fca5a5" },
+  label: { display: "block", fontSize: 12, color: "var(--text-soft)", marginBottom: 6 },
+  hint: { fontSize: 12, color: "var(--text-soft)", marginTop: 6 },
+  err: { marginTop: 6, fontSize: 12, color: "var(--error-text)" },
 
   inlineRow: { display: "flex", gap: 10, marginBottom: 10 },
-  footerText: { marginTop: 14, fontSize: 13, opacity: 0.75 },
-  link: { color: "#a78bfa", cursor: "pointer" },
+  footerText: { marginTop: 14, fontSize: 13, color: "var(--text-soft)" },
+  link: { color: "var(--brand-2)", cursor: "pointer" },
 
   h2: { margin: "10px 0 8px 0", fontSize: 18 },
-  p: { margin: "0 0 14px 0", opacity: 0.85, lineHeight: "20px" },
+  p: { margin: "0 0 14px 0", color: "var(--text-soft)", lineHeight: "20px" },
 
   verifyBox: {
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.10)",
+    background: "var(--input-bg)",
+    border: "1px solid var(--stroke)",
     borderRadius: 14,
     padding: 14,
   },
@@ -516,13 +517,13 @@ const styles = {
     justifyContent: "space-between",
     gap: 12,
   },
-  verifyTitle: { fontSize: 13, opacity: 0.85 },
+  verifyTitle: { fontSize: 13, color: "var(--text-soft)" },
   divider: {
     height: 1,
-    background: "rgba(255,255,255,0.10)",
+    background: "var(--stroke)",
     margin: "12px 0",
   },
-  smallNote: { marginTop: 10, fontSize: 12, opacity: 0.6 },
+  smallNote: { marginTop: 10, fontSize: 12, color: "var(--text-soft)" },
 };
 
 function inputStyle(isError) {
@@ -530,9 +531,9 @@ function inputStyle(isError) {
     width: "100%",
     padding: "10px 12px",
     borderRadius: 12,
-    border: isError ? "1px solid rgba(239,68,68,0.60)" : "1px solid rgba(255,255,255,0.12)",
-    background: "rgba(0,0,0,0.25)",
-    color: "#e7edf7",
+    border: isError ? "1px solid var(--error-border)" : "1px solid var(--stroke)",
+    background: "var(--input-bg)",
+    color: "var(--text-strong)",
     outline: "none",
   };
 }
@@ -543,11 +544,12 @@ function buttonStyle(loading) {
     marginTop: 14,
     padding: "11px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: loading ? "rgba(124,58,237,0.55)" : "rgba(124,58,237,0.85)",
+    border: "1px solid var(--stroke)",
+    background: loading ? "var(--brand)" : "var(--brand)",
     color: "white",
     fontWeight: 600,
     cursor: loading ? "not-allowed" : "pointer",
+    opacity: loading ? 0.65 : 1,
   };
 }
 
@@ -555,12 +557,13 @@ function secondaryButtonStyle(loading) {
   return {
     padding: "10px 12px",
     borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.14)",
-    background: loading ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.08)",
-    color: "#e7edf7",
+    border: "1px solid var(--stroke)",
+    background: "var(--input-bg)",
+    color: "var(--text-strong)",
     fontWeight: 600,
     cursor: loading ? "not-allowed" : "pointer",
     whiteSpace: "nowrap",
+    opacity: loading ? 0.65 : 1,
   };
 }
 
@@ -569,7 +572,7 @@ const linkButtonStyle = {
   padding: 0,
   background: "transparent",
   border: "none",
-  color: "#a78bfa",
+  color: "var(--brand-2)",
   cursor: "pointer",
 };
 
@@ -580,8 +583,8 @@ function radioLabelStyle(active) {
     gap: 8,
     padding: "8px 10px",
     borderRadius: 12,
-    border: active ? "1px solid rgba(167,139,250,0.55)" : "1px solid rgba(255,255,255,0.10)",
-    background: active ? "rgba(167,139,250,0.10)" : "rgba(255,255,255,0.04)",
+    border: active ? "1px solid var(--brand-2)" : "1px solid var(--stroke)",
+    background: active ? "var(--eyebrow-bg)" : "var(--input-bg)",
     cursor: "pointer",
     fontSize: 13,
   };
