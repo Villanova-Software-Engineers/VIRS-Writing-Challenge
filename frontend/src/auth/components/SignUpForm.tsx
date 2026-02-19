@@ -313,7 +313,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onSuccess }) => {
         Already have an account?{' '}
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/auth/sign-in')}
           className="border-none bg-transparent p-0 font-semibold text-primary cursor-pointer"
         >
           Sign in
