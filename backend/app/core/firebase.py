@@ -10,5 +10,8 @@ else:
 
 def initialize_firebase():
     if not firebase_admin._apps:
-        cred = credentials.Certificate(firebase_creds_path)
-        firebase_admin.initialize_app(cred)
+        if os.path.exists(firebase_creds_path) and firebase_creds_path:
+            cred = credentials.Certificate(firebase_creds_path)
+            firebase_admin.initialize_app(cred)
+        else:
+            print("WARNING: Firebase credentials not found. Authentication will be mocked.")

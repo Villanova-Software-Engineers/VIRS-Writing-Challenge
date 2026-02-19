@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Send, Heart, MessageCircle, Trash2, Edit2, X } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const CURRENT_USER = 'You';
 
 export default function MessageBoard() {
@@ -174,7 +174,7 @@ export default function MessageBoard() {
 
   const deleteReply = async (replyId, messageId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/replies/${replyId}`, {
+      const response = await fetch(`${API_BASE_URL}/messages/replies/${replyId}`, {
         method: 'DELETE',
       });
 
@@ -183,9 +183,9 @@ export default function MessageBoard() {
           messages.map((msg) =>
             msg.id === messageId
               ? {
-                  ...msg,
-                  replies: msg.replies.filter((r) => r.id !== replyId),
-                }
+                ...msg,
+                replies: msg.replies.filter((r) => r.id !== replyId),
+              }
               : msg
           )
         );
@@ -237,11 +237,10 @@ export default function MessageBoard() {
         {/* Message input */}
         <div className="mb-10">
           <div
-            className={`relative border transition-all duration-300 ${
-              focusedInput
-                ? 'border-blue-900 bg-blue-50 shadow-md'
-                : 'border-gray-300 bg-white hover:border-gray-400'
-            }`}
+            className={`relative border transition-all duration-300 ${focusedInput
+              ? 'border-blue-900 bg-blue-50 shadow-md'
+              : 'border-gray-300 bg-white hover:border-gray-400'
+              }`}
           >
             <textarea
               value={newMessage}
@@ -259,16 +258,15 @@ export default function MessageBoard() {
             />
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-300 bg-gray-50">
               <span className="text-xs text-gray-600">
-                Tip: Press Ctrl+Enter to send
+                Send a message!
               </span>
               <button
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
-                className={`flex items-center gap-2 px-5 py-2 font-medium transition-all duration-200 ${
-                  newMessage.trim()
-                    ? 'bg-blue-900 text-white hover:bg-blue-800'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`flex items-center gap-2 px-5 py-2 font-medium transition-all duration-200 ${newMessage.trim()
+                  ? 'bg-blue-900 text-white hover:bg-blue-800'
+                  : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }`}
               >
                 <Send size={16} />
                 Send
@@ -357,11 +355,10 @@ export default function MessageBoard() {
                 <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
                   <button
                     onClick={() => toggleLike(message.id, message.liked)}
-                    className={`flex items-center gap-2 text-xs font-medium transition-all duration-200 px-3 py-2 rounded ${
-                      message.liked
-                        ? 'text-white bg-red-600 hover:bg-red-700'
-                        : 'text-white bg-gray-400 hover:bg-gray-500'
-                    }`}
+                    className={`flex items-center gap-2 text-xs font-medium transition-all duration-200 px-3 py-2 rounded ${message.liked
+                      ? 'text-white bg-red-600 hover:bg-red-700'
+                      : 'text-white bg-gray-400 hover:bg-gray-500'
+                      }`}
                   >
                     <Heart
                       size={16}

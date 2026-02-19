@@ -4,12 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from .core import settings, limiter, initialize_firebase
-from .api import health_router, streak_router
+from .api import health_router, streak_router, message_router
 from .api.semester import router as semesters_router
+from .core.database import Base, engine
+from . import models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     initialize_firebase()
+    # Create tables if they don't exist
+    Base.metadata.create_all(bind=engine)
     yield
     
 app = FastAPI(
@@ -32,6 +36,7 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api")
 app.include_router(semesters_router, prefix="/api")
 app.include_router(streak_router, prefix="/api")
+app.include_router(message_router, prefix="/api")
 
 @app.get("/")
 async def read_root():

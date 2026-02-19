@@ -1,9 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
-from datetime import datetime
-
-Base = declarative_base()
+from datetime import datetime, timezone
+from app.core import Base
 
 class Message(Base):
     __tablename__ = "messages"
@@ -13,36 +11,20 @@ class Message(Base):
     department = Column(String)
     avatar = Column(String)
     content = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     color = Column(String)
     
     likes = relationship("Like", back_populates="message", cascade="all, delete-orphan")
     replies = relationship("Reply", back_populates="message", cascade="all, delete-orphan")
-    
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "author": self.author,
-            "department": self.department,
-            "avatar": self.avatar,
-            "content": self.content,
-            "timestamp": self.timestamp.isoformat(),
-            "color": self.color,
-            "likes": len(self.likes),
-            "liked": False,
-            "replies": len(self.replies)
-        }
-
 
 class Like(Base):
     __tablename__ = "likes"
     
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(Integer, ForeignKey("messages.id"), index=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     
     message = relationship("Message", back_populates="likes")
-
 
 class Reply(Base):
     __tablename__ = "replies"
@@ -53,7 +35,7 @@ class Reply(Base):
     department = Column(String)
     avatar = Column(String)
     content = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     color = Column(String)
     
     message = relationship("Message", back_populates="replies")
